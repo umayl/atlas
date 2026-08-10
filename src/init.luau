@@ -1,6 +1,6 @@
 --!strict
 
-const assetGraph = require '@self/assetGraph'
+local assetGraph = require '@self/assetGraph'
 
 return table.freeze {
 	assetGraph = assetGraph,

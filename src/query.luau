@@ -1,8 +1,8 @@
 --!strict
 
-const CollectionService = game:GetService 'CollectionService'
+local CollectionService = game:GetService 'CollectionService'
 
-const types = require './types'
+local types = require './types'
 
 type Query = types.Query
 type AssetGraph = types.AssetGraph
@@ -11,19 +11,19 @@ type Predicate = types.Predicate
 type Mapper = types.Mapper
 type Comparator = types.Comparator
 
-local constructQuery: (graph: AssetGraph, source: () -> { any }, operations: { Operation }) -> Query
+local localructQuery: (graph: AssetGraph, source: () -> { any }, operations: { Operation }) -> Query
 
-const function derive(self: Query, operation: Operation): Query
-	const operations = table.clone(self._operations)
+local function derive(self: Query, operation: Operation): Query
+	local operations = table.clone(self._operations)
 
 	table.insert(operations, operation)
 
-	return constructQuery(self._graph, self._source, operations)
+	return localructQuery(self._graph, self._source, operations)
 end
 
 -- results
 
-const function collect(self: Query): { any }
+local function collect(self: Query): { any }
 	local values = self._source()
 
 	for _, operation in self._operations do
@@ -33,12 +33,12 @@ const function collect(self: Query): { any }
 	return values
 end
 
-const function first(self: Query): any?
+local function first(self: Query): any?
 	return self:collect()[1]
 end
 
-const function single(self: Query): any
-	const values = self:collect()
+local function single(self: Query): any
+	local values = self:collect()
 
 	if #values ~= 1 then
 		error(`Expected exactly one result, got {#values}`)
@@ -47,18 +47,18 @@ const function single(self: Query): any
 	return values[1]
 end
 
-const function any(self: Query): boolean
+local function any(self: Query): boolean
 	return self:first() ~= nil
 end
 
-const function count(self: Query): number
+local function count(self: Query): number
 	return #self:collect()
 end
 
 -- assets
 
-const function clone(self: Query): Instance
-	const instance = self:single()
+local function clone(self: Query): Instance
+	local instance = self:single()
 
 	if typeof(instance) ~= 'Instance' then
 		error 'Query:clone() requires an Instance result'
@@ -67,9 +67,9 @@ const function clone(self: Query): Instance
 	return instance:Clone()
 end
 
-const function factory(self: Query): () -> Instance
+local function factory(self: Query): () -> Instance
 	return function()
-		const instance = self:single()
+		local instance = self:single()
 
 		if typeof(instance) ~= 'Instance' then
 			error 'Query:factory() requires an Instance result'
@@ -79,15 +79,15 @@ const function factory(self: Query): () -> Instance
 	end
 end
 
-const function preload(self: Query)
+local function preload(self: Query)
 	self._graph:preload(self)
 end
 
 -- filters
 
-const function class(self: Query, className: string): Query
+local function class(self: Query, className: string): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) == 'Instance' and value:IsA(className) then
@@ -99,9 +99,9 @@ const function class(self: Query, className: string): Query
 	end)
 end
 
-const function tag(self: Query, tagName: string): Query
+local function tag(self: Query, tagName: string): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) == 'Instance' and CollectionService:HasTag(value, tagName) then
@@ -113,16 +113,16 @@ const function tag(self: Query, tagName: string): Query
 	end)
 end
 
-const function attribute(self: Query, name: string, expected: any): Query
+local function attribute(self: Query, name: string, expected: any): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) ~= 'Instance' then
 				continue
 			end
 
-			const actual = value:GetAttribute(name)
+			local actual = value:GetAttribute(name)
 
 			if typeof(expected) == 'function' then
 				if expected(actual) then
@@ -137,16 +137,16 @@ const function attribute(self: Query, name: string, expected: any): Query
 	end)
 end
 
-const function property(self: Query, name: string, expected: any): Query
+local function property(self: Query, name: string, expected: any): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) ~= 'Instance' then
 				continue
 			end
 
-			const success, actual = pcall(function()
+			local success, actual = pcall(function()
 				return (value :: any)[name]
 			end)
 
@@ -167,9 +167,9 @@ const function property(self: Query, name: string, expected: any): Query
 	end)
 end
 
-const function where(self: Query, predicate: Predicate): Query
+local function where(self: Query, predicate: Predicate): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) == 'Instance' and predicate(value) then
@@ -183,9 +183,9 @@ end
 
 -- hierarchy
 
-const function children(self: Query): Query
+local function children(self: Query): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) ~= 'Instance' then
@@ -201,9 +201,9 @@ const function children(self: Query): Query
 	end)
 end
 
-const function descendants(self: Query): Query
+local function descendants(self: Query): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if typeof(value) ~= 'Instance' then
@@ -219,17 +219,17 @@ const function descendants(self: Query): Query
 	end)
 end
 
-const function parent(self: Query): Query
+local function parent(self: Query): Query
 	return derive(self, function(values)
-		const result = {}
-		const seen = {}
+		local result = {}
+		local seen = {}
 
 		for _, value in values do
 			if typeof(value) ~= 'Instance' then
 				continue
 			end
 
-			const parentInstance = value.Parent
+			local parentInstance = value.Parent
 
 			if parentInstance and not seen[parentInstance] then
 				seen[parentInstance] = true
@@ -244,15 +244,15 @@ end
 
 -- sets
 
-const function intersect(self: Query, other: Query): Query
+local function intersect(self: Query, other: Query): Query
 	return derive(self, function(values)
-		const allowed = {}
+		local allowed = {}
 
 		for _, value in other:collect() do
 			allowed[value] = true
 		end
 
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if allowed[value] then
@@ -264,10 +264,10 @@ const function intersect(self: Query, other: Query): Query
 	end)
 end
 
-const function union(self: Query, other: Query): Query
+local function union(self: Query, other: Query): Query
 	return derive(self, function(values)
-		const result = {}
-		const seen = {}
+		local result = {}
+		local seen = {}
 
 		for _, value in values do
 			if not seen[value] then
@@ -289,15 +289,15 @@ const function union(self: Query, other: Query): Query
 	end)
 end
 
-const function exclude(self: Query, other: Query): Query
+local function exclude(self: Query, other: Query): Query
 	return derive(self, function(values)
-		const excluded = {}
+		local excluded = {}
 
 		for _, value in other:collect() do
 			excluded[value] = true
 		end
 
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			if not excluded[value] then
@@ -311,9 +311,9 @@ end
 
 -- transformations
 
-const function map(self: Query, mapper: Mapper): Query
+local function map(self: Query, mapper: Mapper): Query
 	return derive(self, function(values)
-		const result = {}
+		local result = {}
 
 		for _, value in values do
 			table.insert(result, mapper(value))
@@ -323,7 +323,7 @@ const function map(self: Query, mapper: Mapper): Query
 	end)
 end
 
-const function sort(self: Query, comparator: Comparator): Query
+local function sort(self: Query, comparator: Comparator): Query
 	return derive(self, function(values)
 		table.sort(values, comparator)
 
@@ -331,7 +331,7 @@ const function sort(self: Query, comparator: Comparator): Query
 	end)
 end
 
-const function random(self: Query): Query
+local function random(self: Query): Query
 	return derive(self, function(values)
 		if #values == 0 then
 			return {}
@@ -343,9 +343,9 @@ const function random(self: Query): Query
 	end)
 end
 
--- constructor
+-- localructor
 
-constructQuery = function(graph: AssetGraph, source: () -> { any }, operations: { Operation }): Query
+localructQuery = function(graph: AssetGraph, source: () -> { any }, operations: { Operation }): Query
 	return table.freeze {
 		_graph = graph,
 		_source = source,
@@ -382,8 +382,8 @@ constructQuery = function(graph: AssetGraph, source: () -> { any }, operations: 
 	}
 end
 
-const function query(graph: AssetGraph, source: () -> { any }): Query
-	return constructQuery(graph, source, {})
+local function query(graph: AssetGraph, source: () -> { any }): Query
+	return localructQuery(graph, source, {})
 end
 
 return query

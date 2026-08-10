@@ -1,7 +1,7 @@
 --!strict
 
-const function split(path: string): { string }
-	const parts = {}
+local function split(path: string): { string }
+	local parts = {}
 
 	for part in string.gmatch(path, '[^/]+') do
 		table.insert(parts, part)
@@ -10,8 +10,8 @@ const function split(path: string): { string }
 	return parts
 end
 
-const function normalize(path: string): string
-	const parts = {}
+local function normalize(path: string): string
+	local parts = {}
 
 	for _, part in split(path) do
 		if part == '' or part == '.' then
@@ -32,7 +32,7 @@ const function normalize(path: string): string
 	return `@{table.concat(parts, '/')}`
 end
 
-const function resolve(path: string, relativeTo: string?): string
+local function resolve(path: string, relativeTo: string?): string
 	if string.sub(path, 1, 1) == '@' then
 		return normalize(string.sub(path, 2))
 	end
@@ -44,12 +44,12 @@ const function resolve(path: string, relativeTo: string?): string
 	return normalize(path)
 end
 
-const function fromInstance(instance: Instance, root: Instance): string
+local function fromInstance(instance: Instance, root: Instance): string
 	if instance == root then
 		return '@'
 	end
 
-	const parts = {}
+	local parts = {}
 	local current: Instance? = instance
 
 	while current and current ~= root do

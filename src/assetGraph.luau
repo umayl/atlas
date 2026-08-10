@@ -1,25 +1,25 @@
 --!strict
 
-const ContentProvider = game:GetService 'ContentProvider'
+local ContentProvider = game:GetService 'ContentProvider'
 
-const paths = require './paths'
-const query = require './query'
-const types = require './types'
+local paths = require './paths'
+local query = require './query'
+local types = require './types'
 
 type AssetGraph = types.AssetGraph
 type Query = types.Query
 
 -- indexing
 
-const function index(self: AssetGraph, instance: Instance)
-	const path = paths.fromInstance(instance, self._root)
+local function index(self: AssetGraph, instance: Instance)
+	local path = paths.fromInstance(instance, self._root)
 
 	self._indexed[path] = instance
 	self._records[instance] = path
 end
 
-const function unindex(self: AssetGraph, instance: Instance)
-	const path = self._records[instance]
+local function unindex(self: AssetGraph, instance: Instance)
+	local path = self._records[instance]
 
 	if not path then
 		return
@@ -31,8 +31,8 @@ end
 
 -- resolution
 
-const function resolve(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance?
-	const isGlobal = string.sub(path, 1, 1) == '@'
+local function resolve(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance?
+	local isGlobal = string.sub(path, 1, 1) == '@'
 
 	local relativePath: string?
 
@@ -50,16 +50,16 @@ const function resolve(self: AssetGraph, path: string, relativeTo: string | Inst
 		end
 	end
 
-	const resolvedPath = paths.resolve(path, relativePath)
+	local resolvedPath = paths.resolve(path, relativePath)
 
-	const instance = self._indexed[resolvedPath]
+	local instance = self._indexed[resolvedPath]
 
 	if instance then
 		return instance
 	end
 
 	if isGlobal then
-		const alias = self._aliases[resolvedPath]
+		local alias = self._aliases[resolvedPath]
 
 		if alias and typeof(alias) == 'Instance' then
 			return alias
@@ -71,8 +71,8 @@ end
 
 -- assets
 
-const function get(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance
-	const instance = resolve(self, path, relativeTo)
+local function get(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance
+	local instance = resolve(self, path, relativeTo)
 
 	if not instance then
 		error(`Asset not found: {path}`)
@@ -81,12 +81,12 @@ const function get(self: AssetGraph, path: string, relativeTo: string | Instance
 	return instance
 end
 
-const function find(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance?
+local function find(self: AssetGraph, path: string, relativeTo: string | Instance?): Instance?
 	return resolve(self, path, relativeTo)
 end
 
-const function path(self: AssetGraph, instance: Instance): string
-	const path = self._records[instance]
+local function path(self: AssetGraph, instance: Instance): string
+	local path = self._records[instance]
 
 	if not path then
 		error(`Instance is not registered in the AssetGraph: {instance:GetFullName()}`)
@@ -95,7 +95,7 @@ const function path(self: AssetGraph, instance: Instance): string
 	return path
 end
 
-const function clone(self: AssetGraph, asset: string | Instance): Instance
+local function clone(self: AssetGraph, asset: string | Instance): Instance
 	local instance: Instance
 	if typeof(asset) == 'string' then
 		instance = get(self, asset)
@@ -108,20 +108,20 @@ end
 
 -- aliases
 
-const function alias(self: AssetGraph, name: string, value: Instance | Query)
+local function alias(self: AssetGraph, name: string, value: Instance | Query)
 	if string.sub(name, 1, 1) ~= '@' then
 		error(`Alias must use the @ namespace: {name}`)
 	end
 
-	const resolvedName = paths.resolve(name)
+	local resolvedName = paths.resolve(name)
 
 	self._aliases[resolvedName] = value
 end
 
 -- query sources
 
-const function all(self: AssetGraph): { Instance }
-	const result = {}
+local function all(self: AssetGraph): { Instance }
+	local result = {}
 
 	for instance in self._records do
 		if instance ~= self._root then
@@ -132,7 +132,7 @@ const function all(self: AssetGraph): { Instance }
 	return result
 end
 
-const function queryAssets(self: AssetGraph, source: any?): Query
+local function queryAssets(self: AssetGraph, source: any?): Query
 	if source == nil then
 		return query(self, function()
 			return all(self)
@@ -153,16 +153,16 @@ const function queryAssets(self: AssetGraph, source: any?): Query
 
 	if typeof(source) == 'string' then
 		if string.sub(source, 1, 1) == '@' then
-			const resolvedPath = paths.resolve(source)
+			local resolvedPath = paths.resolve(source)
 
-			const alias = self._aliases[resolvedPath]
+			local alias = self._aliases[resolvedPath]
 
 			if alias and type(alias) == 'table' and alias._atlasQuery == true then
 				return alias
 			end
 		end
 
-		const instance = find(self, source)
+		local instance = find(self, source)
 
 		if not instance then
 			error(`Query source not found: {source}`)
@@ -186,8 +186,8 @@ end
 
 -- preload
 
-const function preload(self: AssetGraph, source: any)
-	const instances = {}
+local function preload(self: AssetGraph, source: any)
+	local instances = {}
 
 	if typeof(source) == 'string' then
 		table.insert(instances, get(self, source))
@@ -211,8 +211,8 @@ const function preload(self: AssetGraph, source: any)
 		error 'Invalid preload source'
 	end
 
-	const preloadInstances = {}
-	const seen = {}
+	local preloadInstances = {}
+	local seen = {}
 
 	for _, instance in instances do
 		if not seen[instance] then
@@ -235,10 +235,10 @@ const function preload(self: AssetGraph, source: any)
 	end
 end
 
--- constructor
+-- localructor
 
-const function assetGraph(root: Instance): AssetGraph
-	const graph = {
+local function assetGraph(root: Instance): AssetGraph
+	local graph = {
 		_root = root,
 		_indexed = {},
 		_records = {},
